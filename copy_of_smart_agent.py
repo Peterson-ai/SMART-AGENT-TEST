@@ -156,7 +156,8 @@ def generate_answers(query, retrieved_context):
             r1 = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": rag_prompt}],
-                temperature=0.3
+                temperature=0.3,
+                max_completion_tokens=200  # <--- Added limit here
             )
             rag_response = r1.choices[0].message.content
 
@@ -164,14 +165,15 @@ def generate_answers(query, retrieved_context):
             r2 = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": base_prompt}],
-                temperature=0.3
+                temperature=0.3,
+                max_completion_tokens=200  # <--- Added limit here
             )
             base_response = r2.choices[0].message.content
             
         except openai.AuthenticationError:
             return "❌ Error: Invalid API Key. Please check the sidebar.", "❌ Error: Invalid API Key."
         except openai.APIConnectionError:
-            return "❌ Error: Connection lost. Check the internet.", "❌ Error: Connection lost."
+            return "❌ Error: Connection lost. Check internet.", "❌ Error: Connection lost."
         except Exception as e:
             return f"❌ An error occurred: {e}", f"❌ An error occurred: {e}"
 
