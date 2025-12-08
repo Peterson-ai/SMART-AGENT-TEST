@@ -14,6 +14,7 @@ import os
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
+import openai
 from openai import OpenAI
 
 # --- PAGE CONFIGURATION ---
@@ -132,43 +133,49 @@ def retrieve_docs(query, k=2):
 
 def generate_answers(query, retrieved_context):
     context_str = "\n".join(retrieved_context)
-
-    # 1. RAG Prompt
+    
     rag_prompt = f"""
     You are a helpful teaching assistant.
     Use ONLY the context below to answer the question. If the answer isn't in the context, say "I don't know based on the provided documents."
-
+    
     Context:
     {context_str}
-
+    
     Question: {query}
     """
-
-    # 2. Pure GPT Prompt (for comparison)
+    
     base_prompt = f"Answer the following question to the best of your ability: {query}"
 
-    rag_response = "Error: Client not initialized"
-    base_response = "Error: Client not initialized"
+    # Default messages in case of failure
+    rag_response = "⚠️ Agent Error: Could not generate a response."
+    base_response = "⚠️ Agent Error: Could not generate a response."
 
     if client:
-        # Get RAG Answer
-        r1 = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": rag_prompt}],
-            temperature=0.3
-        )
-        rag_response = r1.choices[0].message.content
+        try:
+            # Get RAG Answer
+            r1 = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": rag_prompt}],
+                temperature=0.3
+            )
+            rag_response = r1.choices[0].message.content
 
-        # Get Base Answer
-        r2 = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": base_prompt}],
-            temperature=0.3
-        )
-        base_response = r2.choices[0].message.content
+            # Get Base Answer
+            r2 = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": base_prompt}],
+                temperature=0.3
+            )
+            base_response = r2.choices[0].message.content
+            
+        except openai.AuthenticationError:
+            return "❌ Error: Invalid API Key. Please check the sidebar.", "❌ Error: Invalid API Key."
+        except openai.APIConnectionError:
+            return "❌ Error: Connection lost. Check the internet.", "❌ Error: Connection lost."
+        except Exception as e:
+            return f"❌ An error occurred: {e}", f"❌ An error occurred: {e}"
 
     return rag_response, base_response
-
 # --- 5. CHAT INPUT HANDLER ---
 if prompt := st.chat_input():
     if not client:
