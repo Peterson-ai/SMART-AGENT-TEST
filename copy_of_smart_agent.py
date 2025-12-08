@@ -74,9 +74,7 @@ LSTMs and GRUs are variants of RNNs designed to better capture long-term depende
 BERT is a bidirectional transformer encoder pre-trained using masked language modeling.
 GPT models are decoder-based transformers designed for autoregressive generation.
 Sequence-to-sequence models are widely used in machine translation tasks.
-Information retrieval can be enhanced using dense embeddings such as SBERT.
-The midterm exam for this class covers arrays, linked lists, stacks, and queues.
-The professor's favorite color is Deep Blue, but he hates the color yellow."""
+Information retrieval can be enhanced using dense embeddings such as SBERT."""
 
     kb_input = st.text_area("Documents (One per line)", value=default_text, height=300)
 
